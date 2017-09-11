@@ -17,6 +17,8 @@ import android.view.SurfaceView;
 
 import com.liberty.waveview.R;
 
+import static android.graphics.Canvas.ALL_SAVE_FLAG;
+
 
 /**
  * Created by Peter on 2017/9/8 0008.
@@ -153,11 +155,11 @@ public class WaveView extends SurfaceView implements SurfaceHolder.Callback{
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         mThread = new DrawThread(holder);
-        mThread.setRun(true);
-        mThread.start();
-//        Canvas canvas = holder.lockCanvas();
-//        doDraw(canvas);
-//        holder.unlockCanvasAndPost(canvas);
+//        mThread.setRun(true);
+//        mThread.start();
+        Canvas canvas = holder.lockCanvas();
+        doDraw(canvas);
+        holder.unlockCanvasAndPost(canvas);
     }
 
     @Override
@@ -339,7 +341,12 @@ public class WaveView extends SurfaceView implements SurfaceHolder.Callback{
         }
 
         float x,y;
-        int sc = canvas.saveLayer(0,0,mWidth,mHeight,null);
+        int sc=-1;
+//        if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.LOLLIPOP){
+            sc = canvas.saveLayer(0,0,mWidth,mHeight,null,ALL_SAVE_FLAG);
+//        }else {
+//            sc = canvas.save();
+//        }
         mFillPaint.setColor(lineStartColor);
         mFillPaint.setAlpha((int)(0.5*255));
         float[] lineY = new float[6];
@@ -383,7 +390,8 @@ public class WaveView extends SurfaceView implements SurfaceHolder.Callback{
         canvas.drawPath(paths[4],mLinePaint);
         canvas.restoreToCount(sc);
 
-        sc = canvas.saveLayer(0,0,mWidth,mHeight,null);
+        sc = canvas.saveLayer(0,0,mWidth,mHeight,null,ALL_SAVE_FLAG);
+
         mFillPaint.setAlpha((int)(0.7*255));
         for (float i=-K;i<=K;i+=0.01){
             x = mHalfViewWidth*((i+K)/K);

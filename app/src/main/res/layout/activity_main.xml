@@ -5,10 +5,16 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@android:color/black"
     tools:context="com.liberty.waveview.MainActivity">
 
     <com.liberty.waveview.view.WaveView
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
+        android:layout_height="200dp" />
+    <Button
+        android:id="@+id/record"
+        android:text="Record"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 </LinearLayout>
