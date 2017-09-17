@@ -5,28 +5,28 @@ import android.graphics.Canvas;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.PixelFormat;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.support.annotation.ColorInt;
+import android.support.annotation.Nullable;
 import android.util.AttributeSet;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
+import android.util.Log;
+import android.view.View;
 
+import com.liberty.waveview.Logger;
 import com.liberty.waveview.R;
 
 import static android.graphics.Canvas.ALL_SAVE_FLAG;
 
-
 /**
- * Created by Peter on 2017/9/8 0008.
+ * Created by liberty on 2017/9/17.
  */
 
-public class WaveView extends SurfaceView implements SurfaceHolder.Callback{
+public class WaveView2 extends View {
 
-    private static final String TAG = WaveView.class.getSimpleName();
+    private static final String TAG = WaveView2.class.getSimpleName();
     private boolean mRecordingState = false;
     private float mPhase = 0;
     private float mSpeed = 0.5f;
@@ -44,13 +44,12 @@ public class WaveView extends SurfaceView implements SurfaceHolder.Callback{
     private int lineStartColor;
     private int lineEndColor;
 
-    private DrawThread mThread;
-
     private Paint mFillPaint;
     private Paint mLinePaint;
 
     private Path[] paths = new Path[5];
-    private @ColorInt int[] colors=new int[5];
+    private @ColorInt
+    int[] colors=new int[5];
     private static final float LINE_WIDTH[] = { 5f, 5f, 5f, 5f, 5f };
 
     private float[][] lineX=new float[][]{
@@ -60,21 +59,17 @@ public class WaveView extends SurfaceView implements SurfaceHolder.Callback{
 
     private PorterDuffXfermode xfermode;
 
-    private LinearGradient gradient,gradient1,gradient2,gradient3,gradient4;
-
-    private Path baseLine;
-
-    public WaveView(Context context, AttributeSet attrs) {
+    public WaveView2(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         init(context);
     }
 
     private void init(Context context){
         setLayerType(LAYER_TYPE_HARDWARE,null);
-        this.getHolder().addCallback(this);
-        //设置透明背景，以及解决setXfermode失效的问题，具体原理不明
-        this.getHolder().setFormat(PixelFormat.TRANSPARENT);
-        this.setZOrderOnTop(true);
+//        this.getHolder().addCallback(this);
+//        //设置透明背景，以及解决setXfermode失效的问题，具体原理不明
+//        this.getHolder().setFormat(PixelFormat.TRANSPARENT);
+//        this.setZOrderOnTop(true);
 
         mFillPaint = new Paint();
         mFillPaint.setAntiAlias(true);
@@ -98,112 +93,27 @@ public class WaveView extends SurfaceView implements SurfaceHolder.Callback{
 
         lineStartColor = context.getResources().getColor(R.color.line1_start);
         lineEndColor = context.getResources().getColor(R.color.line1_end);
-
-        baseLine = new Path();
-
-
     }
 
     private static final double commonParam =0.75*Math.PI;
 
-    private double getLine1(float x){
-//        mPhase = (float) ((mPhase +Math.PI*0.5)%(2*Math.PI));
-        mPhase+=0.1;
-//        Log.d(TAG,"mPhase = "+mPhase);
-        Double a = Math.sin(commonParam*x-(0.5*Math.PI));
-//        Double a = Math.sin(commonParam*x-(mPhase));
-        Double d = 4+Math.pow(x,4);
-        Double b = (4/d);
-        Double c = Math.pow(b,2.5);
-        Double y = 0.5*c*a;
-//        Log.d(TAG,"getLine1:"+a+" "+b+" "+c+" "+y);
-        return y;
-    }
-
-    private double getLine2(float x){
-        Double a = Math.sin(commonParam*x+(0.5*Math.PI+mPhase));
-        Double b = (4/(4+Math.pow(x,4)));
-        Double c = Math.pow(b,2.5);
-        Double y = 0.5*c*a;
-//        Log.d(TAG,"getLine2:"+a+" "+b+" "+c+" "+y);
-        return y;
-    }
-
-    private double getLine3(float x){
-        Double a = Math.sin(commonParam*x-(0.27*Math.PI+mPhase));
-        Double b = (4/(4+Math.pow(x,4)));
-        Double c = Math.pow(b,2.5);
-        Double y = 0.5*c*a;
-//        Log.d(TAG,"getLine3:"+a+" "+b+" "+c+" "+y);
-        return y;
-    }
-
-    private double getLine4(float x){
-        Double a = Math.sin(commonParam*x+(0.73*Math.PI+mPhase));
-        Double b = (4/(4+Math.pow(x,4)));
-        Double c = Math.pow(b,2.5);
-        Double y = 0.5*c*a;
-//        Log.d(TAG,"getLine4:"+a+" "+b+" "+c+" "+y);
-        return y;
-    }
-
-    private double getLine5(float x){
-        Double a = Math.sin(commonParam*x-(0.5*Math.PI+mPhase));
-        Double b = (4/(4+Math.pow(x,4)));
-        Double c = Math.pow(b,2.5);
-        Double y = 0.1*c*a;
-//        Log.d(TAG,"getLine5:"+a+" "+b+" "+c+" "+y);
-        return y;
-    }
-
     private double calcValueLineOne(float x,float mesc){
         mesc%=2;
 
-        double a = Math.sin(commonParam*x-(mesc*Math.PI));
-//        Double a = Math.sin(commonParam*x-(mPhase));
-        double d = 4+Math.pow(x,4);
-        double b = (4/d);
-        double c = Math.pow(b,2.5);
-        double y = c*a;
-//        Log.d(TAG,"getLine1:"+a+" "+b+" "+c+" "+y);
-        return y;
-    }
-
-    private double calcValueLineTwo(float x,float mesc){
-        mesc%=2;
-
-        Double a = Math.sin(commonParam*x+(mesc*Math.PI));
+        Double a = Math.sin(commonParam*x-(mesc*Math.PI));
 //        Double a = Math.sin(commonParam*x-(mPhase));
         Double d = 4+Math.pow(x,4);
         Double b = (4/d);
         Double c = Math.pow(b,2.5);
         Double y = c*a;
-//        Log.d(TAG,"getLine1:"+a+" "+b+" "+c+" "+y);
+        Log.d(TAG,"getLine1:"+a+" "+b+" "+c+" "+y);
         return y;
     }
 
     @Override
-    public void surfaceCreated(SurfaceHolder holder) {
-        mThread = new DrawThread(holder);
-        mThread.setRun(true);
-        mThread.start();
-//        Canvas canvas = holder.lockCanvas();
-//        doDraw(canvas);
-//        holder.unlockCanvasAndPost(canvas);
-    }
-
-    @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-
-//        Log.d(TAG,"width = "+width+" height = "+height+" halfWidth = "+mHalfViewWidth+" halfHeight = "+mHalfViewHeight);
-
-    }
-
-    @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
-        synchronized (mSurfaceLock){
-            mThread.setRun(false);
-        }
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+        doDraw(canvas);
     }
 
     @Override
@@ -213,79 +123,13 @@ public class WaveView extends SurfaceView implements SurfaceHolder.Callback{
         mHalfViewWidth = w/2;
         mWidth = w;
         mHeight = h;
-//        mAmplitude = mWidth>>3;
-        baseLine.moveTo(0,mHalfViewHeight);
-        baseLine.lineTo(mWidth,mHalfViewHeight);
-        gradient = new LinearGradient(mWidth/3,mHalfViewHeight*13/16,mWidth/3,mHalfViewHeight*19/16,lineStartColor,lineEndColor, Shader.TileMode.MIRROR);;
-        gradient1 = new LinearGradient(0,14*mHalfViewHeight/16,0,18*mHalfViewHeight/16,lineEndColor,lineStartColor, Shader.TileMode.MIRROR);;
-        gradient2 = new LinearGradient(2*mWidth/3,14*mHalfViewHeight/16,2*mWidth/3,18*mHalfViewHeight/16,lineEndColor,lineStartColor, Shader.TileMode.MIRROR);
-        gradient3 = new LinearGradient(0,15*mHalfViewHeight/16,0,17*mHalfViewHeight/16,lineEndColor,lineStartColor, Shader.TileMode.MIRROR);;
-        gradient4 = new LinearGradient(2*mWidth/3,mHalfViewHeight*14/16,2*mWidth/3,mHalfViewHeight*18/16,lineEndColor,lineStartColor, Shader.TileMode.MIRROR);
-
-    }
-
-    public void setAmplitude(float amplitude, boolean recordingState) {
-        mAmplitude = amplitude;
-//        Log.d(TAG,"mAmplitude = "+mAmplitude);
-    }
-
-    private final Object mSurfaceLock = new Object();
-
-    private class DrawThread extends Thread{
-        private SurfaceHolder mHolder;
-        private boolean mIsRun = false;
-
-        public DrawThread(SurfaceHolder holder){
-            mHolder = holder;
-        }
-
-        @Override
-        public void run() {
-            super.run();
-            long start = System.currentTimeMillis();
-            while (true){
-                synchronized (mSurfaceLock){
-                    if (!mIsRun){
-                        return;
-                    }
-
-                    Canvas canvas = mHolder.lockCanvas();
-                    if (canvas!=null){
-                        long mesc = System.currentTimeMillis()-start;
-                        doDraw(canvas,mesc);
-                        mHolder.unlockCanvasAndPost(canvas);
-                    }
-                }
-                try {
-                    Thread.sleep(16);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        public void setRun(boolean isRun){
-            this.mIsRun = isRun;
-        }
-    }
-
-    private Paint cleanPaint;
-
-    private void cleanCanvas(Canvas canvas){
-        if (cleanPaint == null){
-            cleanPaint = new Paint();
-            cleanPaint.setAntiAlias(true);
-            cleanPaint.setStyle(Paint.Style.STROKE);
-            cleanPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
-        }
-        canvas.drawPaint(cleanPaint);
     }
 
     private static final int SAMPLINT_SIZE = 64;
     private float[] samplingX;
     private float[] mapX;
 
-    private volatile float mAmplitude =0f;
+    private volatile float mAmplitude;
     private float[][] crestAndCrossPoints = new float[9][];
     {
         for (int i = 0;i<9;i++){
@@ -293,15 +137,22 @@ public class WaveView extends SurfaceView implements SurfaceHolder.Callback{
         }
     }
 
-    private float[][] crestAndCrossPoints1 = new float[9][];
-    {
-        for (int i = 0;i<9;i++){
-            crestAndCrossPoints1[i]=new float[2];
+    private volatile long mesc;
+    private long start=-1;
+
+    public void setAmplitude(float amplitude, long mesc) {
+        mAmplitude = amplitude*2;
+        if (start == -1){
+            start = mesc;
+            this.mesc = start;
+        }else {
+            this.mesc = mesc-start;
         }
+        postInvalidate();
     }
 
-    private synchronized void doDraw(Canvas canvas,long mesc){
-        cleanCanvas(canvas);
+    private void doDraw(Canvas canvas){
+//        cleanCanvas(canvas);
         if (samplingX==null){
             mWidth = canvas.getWidth();
             samplingX = new float[SAMPLINT_SIZE+1];
@@ -320,47 +171,46 @@ public class WaveView extends SurfaceView implements SurfaceHolder.Callback{
             paths[i].moveTo(0,mHalfViewHeight);
         }
 
-        float x;
+        float x,y;
         float[] xy;
         int sc=-1;
 
+        Logger.d(TAG,"mesc = "+mesc);
         float offset = mesc/500f;
+        Logger.d(TAG,"offset = "+offset);
         float lastV,curV = 0,nextV = (float)(mAmplitude*calcValueLineOne(mapX[0],offset-0.3f));
+        Logger.d(TAG,"mAmplitude = "+mAmplitude);
         float absLastV,absCurV,absNextV;
         boolean lastIsCrest = false;
 
         int crestAndCrossCount = 0;
 
         sc = canvas.saveLayer(0,0,mWidth,mHeight,null,ALL_SAVE_FLAG);
-        mFillPaint.setAlpha((int)(0.7*255));
-        mLinePaint.setAlpha((int)(0.7*255));
+        mFillPaint.setAlpha((int)(0.4*255));
+        mLinePaint.setAlpha((int)(0.4*255));
         for (int i = 0; i<=SAMPLINT_SIZE; i++){
             x = samplingX[i];
             lastV =curV;
             curV = nextV;
             nextV = i<SAMPLINT_SIZE?(float)(mAmplitude*calcValueLineOne(mapX[i+1],offset-0.3f)):0;
-//            Log.d(TAG,"x = "+x+" nextV = "+nextV+" halfHeight = "+mHalfViewHeight);
+            Log.d(TAG,"x = "+x+" nextV = "+nextV+" halfHeight = "+mHalfViewHeight);
             paths[2].lineTo(x,mHalfViewHeight+curV);
             paths[3].lineTo(x,mHalfViewHeight-curV);
             absLastV = Math.abs(lastV);
             absCurV = Math.abs(curV);
             absNextV = Math.abs(nextV);
             if (i== 0||i==SAMPLINT_SIZE ||(lastIsCrest&&absCurV<absLastV&&absCurV<absNextV)){
-                if (crestAndCrossCount<crestAndCrossPoints.length){
-                    xy = crestAndCrossPoints[crestAndCrossCount++];
-                    xy[0] = x;
-                    xy[1] = 0;
-                    lastIsCrest = false;
-//                    Log.d(TAG,"lastIsCrest = "+lastIsCrest+" xy = "+xy[0]+" "+xy[1]);
-                }
+                xy = crestAndCrossPoints[crestAndCrossCount++];
+                xy[0] = x;
+                xy[1] = 0;
+                lastIsCrest = false;
+                Log.d(TAG,"lastIsCrest = "+lastIsCrest+" xy = "+xy[0]+" "+xy[1]);
             }else if (!lastIsCrest&&absCurV>absLastV&&absCurV>absNextV){
-                if (crestAndCrossCount<crestAndCrossPoints.length){
-                    xy = crestAndCrossPoints[crestAndCrossCount++];
-                    xy[0] = x;
-                    xy[1] = curV;
-                    lastIsCrest = true;
-//                    Log.d(TAG,"lastIsCrest = "+lastIsCrest+" xy = "+xy[0]+" "+xy[1]);
-                }
+                xy = crestAndCrossPoints[crestAndCrossCount++];
+                xy[0] = x;
+                xy[1] = curV;
+                lastIsCrest = true;
+                Log.d(TAG,"lastIsCrest = "+lastIsCrest+" xy = "+xy[0]+" "+xy[1]);
             }
         }
 
@@ -383,24 +233,23 @@ public class WaveView extends SurfaceView implements SurfaceHolder.Callback{
         mFillPaint.setXfermode(xfermode);
 
         for (int i = 0; i < 9; i++) {
-//            Log.d(TAG,"crestAndCrossPoints i = "+i+" "+crestAndCrossPoints[i][0]+" "+crestAndCrossPoints[i][1]);
+            Logger.d(TAG,"crestAndCrossPoints i = "+i+" "+crestAndCrossPoints[i][0]+" "+crestAndCrossPoints[i][1]);
         }
 
         for (int i = 2;i<crestAndCrossCount;i+=2){
             startX = crestAndCrossPoints[i-2][0];
             crestY = crestAndCrossPoints[i-1][1];
             endX = crestAndCrossPoints[i][0];
-//            Log.d(TAG,"startX = "+startX+"  crestY = "+crestY+"  endX = "+endX);
+            Log.d(TAG,"startX = "+startX+"  crestY = "+crestY+"  endX = "+endX);
             mFillPaint.setShader(new LinearGradient(0,mHalfViewHeight+crestY,0,mHalfViewHeight-crestY,lineStartColor,lineEndColor, Shader.TileMode.REPEAT));
             rectF.set(startX,mHalfViewHeight+crestY,endX,mHalfViewHeight-crestY);
             canvas.drawRect(rectF,mFillPaint);
         }
         mFillPaint.setShader(null);
         mFillPaint.setXfermode(null);
-        mLinePaint.setStrokeWidth(5f);
-        mLinePaint.setColor(colors[2]);
+        mLinePaint.setStrokeWidth(LINE_WIDTH[0]);
+        mLinePaint.setColor(colors[0]);
         canvas.drawPath(paths[2],mLinePaint);
-        mLinePaint.setColor(colors[3]);
         canvas.drawPath(paths[3],mLinePaint);
 
         canvas.restoreToCount(sc);
@@ -455,35 +304,29 @@ public class WaveView extends SurfaceView implements SurfaceHolder.Callback{
             lastV =curV;
             curV = nextV;
             nextV = i<SAMPLINT_SIZE?(float)(mAmplitude*calcValueLineOne(mapX[i+1],offset)):0;
-//            Log.d(TAG,"x = "+x+" nextV = "+nextV+" halfHeight = "+mHalfViewHeight);
+            Log.d(TAG,"x = "+x+" nextV = "+nextV+" halfHeight = "+mHalfViewHeight);
             paths[0].lineTo(x,mHalfViewHeight+curV);
             paths[1].lineTo(x,mHalfViewHeight-curV);
-            paths[4].lineTo(x,(mHalfViewHeight-curV/5));
             absLastV = Math.abs(lastV);
             absCurV = Math.abs(curV);
             absNextV = Math.abs(nextV);
             if (i== 0||i==SAMPLINT_SIZE ||(lastIsCrest&&absCurV<absLastV&&absCurV<absNextV)){
-                if (crestAndCrossCount1<crestAndCrossPoints1.length){
-                    xy = crestAndCrossPoints1[crestAndCrossCount1++];
-                    xy[0] = x;
-                    xy[1] = 0;
-                    lastIsCrest = false;
-//                    Log.d(TAG,"lastIsCrest = "+lastIsCrest+" xy = "+xy[0]+" "+xy[1]);
-                }
+                xy = crestAndCrossPoints[crestAndCrossCount1++];
+                xy[0] = x;
+                xy[1] = 0;
+                lastIsCrest = false;
+                Log.d(TAG,"lastIsCrest = "+lastIsCrest+" xy = "+xy[0]+" "+xy[1]);
             }else if (!lastIsCrest&&absCurV>absLastV&&absCurV>absNextV){
-                if (crestAndCrossCount1<crestAndCrossPoints1.length){
-                    xy = crestAndCrossPoints1[crestAndCrossCount1++];
-                    xy[0] = x;
-                    xy[1] = curV;
-                    lastIsCrest = true;
-//                    Log.d(TAG,"lastIsCrest = "+lastIsCrest+" xy = "+xy[0]+" "+xy[1]);
-                }
+                xy = crestAndCrossPoints[crestAndCrossCount1++];
+                xy[0] = x;
+                xy[1] = curV;
+                lastIsCrest = true;
+                Log.d(TAG,"lastIsCrest = "+lastIsCrest+" xy = "+xy[0]+" "+xy[1]);
             }
         }
 
         paths[0].lineTo(mWidth,mHalfViewHeight);
         paths[1].lineTo(mWidth,mHalfViewHeight);
-        paths[4].lineTo(mWidth,mHalfViewHeight);
 //        for (float i=-K;i<=K;i+=0.01){
 ////            x = mHalfViewWidth*((i+K)/K);
 //            x = mHalfViewWidth*i;
@@ -494,34 +337,30 @@ public class WaveView extends SurfaceView implements SurfaceHolder.Callback{
 //        }
         canvas.drawPath(paths[0],mFillPaint);
         canvas.drawPath(paths[1],mFillPaint);
-//        canvas.drawPath(paths[4],mFillPaint);
+
 
 
         mFillPaint.setXfermode(xfermode);
 
         for (int i = 0; i < 9; i++) {
-//            Log.d(TAG,"crestAndCrossPoints i = "+i+" "+crestAndCrossPoints[i][0]+" "+crestAndCrossPoints[i][1]);
+            Logger.d(TAG,"crestAndCrossPoints i = "+i+" "+crestAndCrossPoints[i][0]+" "+crestAndCrossPoints[i][1]);
         }
 
         for (int i = 2;i<crestAndCrossCount1;i+=2){
-            startX = crestAndCrossPoints1[i-2][0];
-            crestY = crestAndCrossPoints1[i-1][1];
-            endX = crestAndCrossPoints1[i][0];
-//            Log.d(TAG,"startX = "+startX+"  crestY = "+crestY+"  endX = "+endX);
+            startX = crestAndCrossPoints[i-2][0];
+            crestY = crestAndCrossPoints[i-1][1];
+            endX = crestAndCrossPoints[i][0];
+            Log.d(TAG,"startX = "+startX+"  crestY = "+crestY+"  endX = "+endX);
             mFillPaint.setShader(new LinearGradient(0,mHalfViewHeight+crestY,0,mHalfViewHeight-crestY,lineStartColor,lineEndColor, Shader.TileMode.REPEAT));
             rectF.set(startX,mHalfViewHeight+crestY,endX,mHalfViewHeight-crestY);
             canvas.drawRect(rectF,mFillPaint);
         }
         mFillPaint.setShader(null);
         mFillPaint.setXfermode(null);
-        mLinePaint.setStrokeWidth(5f);
-
-        mLinePaint.setColor(colors[1]);
-        canvas.drawPath(paths[1],mLinePaint);
+        mLinePaint.setStrokeWidth(LINE_WIDTH[0]);
         mLinePaint.setColor(colors[0]);
         canvas.drawPath(paths[0],mLinePaint);
-        mLinePaint.setColor(colors[4]);
-        canvas.drawPath(paths[4],mLinePaint);
+        canvas.drawPath(paths[1],mLinePaint);
 //        canvas.drawPath(paths[1],mFillPaint);
 //        mFillPaint.setStyle(Paint.Style.STROKE);
 //        mFillPaint.setStrokeWidth(3f);
@@ -548,5 +387,4 @@ public class WaveView extends SurfaceView implements SurfaceHolder.Callback{
         canvas.restoreToCount(sc);
 
     }
-
 }

@@ -10,6 +10,7 @@
     tools:context="com.liberty.waveview.MainActivity">
 
     <com.liberty.waveview.view.WaveView
+        android:id="@+id/waveView"
         android:layout_width="match_parent"
         android:layout_height="200dp" />
     <Button
