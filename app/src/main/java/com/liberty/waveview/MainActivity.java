@@ -163,7 +163,7 @@ public class MainActivity extends AppCompatActivity {
                 double mean = v/(double)r;
                 double volume = 10*Math.log10(mean);
                 Logger.d(TAG,"dB = "+volume);
-                waveView.setAmplitude((float) volume,true);
+                waveView.setAmplitude((float) volume);
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {

@@ -12,6 +12,7 @@ import android.graphics.RectF;
 import android.graphics.Shader;
 import android.support.annotation.ColorInt;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
@@ -27,16 +28,7 @@ import static android.graphics.Canvas.ALL_SAVE_FLAG;
 public class WaveView extends SurfaceView implements SurfaceHolder.Callback{
 
     private static final String TAG = WaveView.class.getSimpleName();
-    private boolean mRecordingState = false;
-    private float mPhase = 0;
-    private float mSpeed = 0.5f;
-    private float speed = 0.5f;// 0.15f;
-    private float noise = 0.0f;// 0.02f;
 
-    private float curNoise = 0.0f;
-    private float preNoise = 0.0f;
-
-    private int mHalfViewWidth;
     private int mHalfViewHeight;
     private int mWidth;
     private int mHeight;
@@ -59,8 +51,6 @@ public class WaveView extends SurfaceView implements SurfaceHolder.Callback{
     };
 
     private PorterDuffXfermode xfermode;
-
-    private LinearGradient gradient,gradient1,gradient2,gradient3,gradient4;
 
     private Path baseLine;
 
@@ -106,56 +96,6 @@ public class WaveView extends SurfaceView implements SurfaceHolder.Callback{
 
     private static final double commonParam =0.75*Math.PI;
 
-    private double getLine1(float x){
-//        mPhase = (float) ((mPhase +Math.PI*0.5)%(2*Math.PI));
-        mPhase+=0.1;
-//        Log.d(TAG,"mPhase = "+mPhase);
-        Double a = Math.sin(commonParam*x-(0.5*Math.PI));
-//        Double a = Math.sin(commonParam*x-(mPhase));
-        Double d = 4+Math.pow(x,4);
-        Double b = (4/d);
-        Double c = Math.pow(b,2.5);
-        Double y = 0.5*c*a;
-//        Log.d(TAG,"getLine1:"+a+" "+b+" "+c+" "+y);
-        return y;
-    }
-
-    private double getLine2(float x){
-        Double a = Math.sin(commonParam*x+(0.5*Math.PI+mPhase));
-        Double b = (4/(4+Math.pow(x,4)));
-        Double c = Math.pow(b,2.5);
-        Double y = 0.5*c*a;
-//        Log.d(TAG,"getLine2:"+a+" "+b+" "+c+" "+y);
-        return y;
-    }
-
-    private double getLine3(float x){
-        Double a = Math.sin(commonParam*x-(0.27*Math.PI+mPhase));
-        Double b = (4/(4+Math.pow(x,4)));
-        Double c = Math.pow(b,2.5);
-        Double y = 0.5*c*a;
-//        Log.d(TAG,"getLine3:"+a+" "+b+" "+c+" "+y);
-        return y;
-    }
-
-    private double getLine4(float x){
-        Double a = Math.sin(commonParam*x+(0.73*Math.PI+mPhase));
-        Double b = (4/(4+Math.pow(x,4)));
-        Double c = Math.pow(b,2.5);
-        Double y = 0.5*c*a;
-//        Log.d(TAG,"getLine4:"+a+" "+b+" "+c+" "+y);
-        return y;
-    }
-
-    private double getLine5(float x){
-        Double a = Math.sin(commonParam*x-(0.5*Math.PI+mPhase));
-        Double b = (4/(4+Math.pow(x,4)));
-        Double c = Math.pow(b,2.5);
-        Double y = 0.1*c*a;
-//        Log.d(TAG,"getLine5:"+a+" "+b+" "+c+" "+y);
-        return y;
-    }
-
     private double calcValueLineOne(float x,float mesc){
         mesc%=2;
 
@@ -169,34 +109,17 @@ public class WaveView extends SurfaceView implements SurfaceHolder.Callback{
         return y;
     }
 
-    private double calcValueLineTwo(float x,float mesc){
-        mesc%=2;
-
-        Double a = Math.sin(commonParam*x+(mesc*Math.PI));
-//        Double a = Math.sin(commonParam*x-(mPhase));
-        Double d = 4+Math.pow(x,4);
-        Double b = (4/d);
-        Double c = Math.pow(b,2.5);
-        Double y = c*a;
-//        Log.d(TAG,"getLine1:"+a+" "+b+" "+c+" "+y);
-        return y;
-    }
-
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         mThread = new DrawThread(holder);
         mThread.setRun(true);
         mThread.start();
-//        Canvas canvas = holder.lockCanvas();
-//        doDraw(canvas);
-//        holder.unlockCanvasAndPost(canvas);
     }
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
 
 //        Log.d(TAG,"width = "+width+" height = "+height+" halfWidth = "+mHalfViewWidth+" halfHeight = "+mHalfViewHeight);
-
     }
 
     @Override
@@ -210,23 +133,15 @@ public class WaveView extends SurfaceView implements SurfaceHolder.Callback{
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
         mHalfViewHeight = h/2;
-        mHalfViewWidth = w/2;
         mWidth = w;
         mHeight = h;
-//        mAmplitude = mWidth>>3;
         baseLine.moveTo(0,mHalfViewHeight);
         baseLine.lineTo(mWidth,mHalfViewHeight);
-        gradient = new LinearGradient(mWidth/3,mHalfViewHeight*13/16,mWidth/3,mHalfViewHeight*19/16,lineStartColor,lineEndColor, Shader.TileMode.MIRROR);;
-        gradient1 = new LinearGradient(0,14*mHalfViewHeight/16,0,18*mHalfViewHeight/16,lineEndColor,lineStartColor, Shader.TileMode.MIRROR);;
-        gradient2 = new LinearGradient(2*mWidth/3,14*mHalfViewHeight/16,2*mWidth/3,18*mHalfViewHeight/16,lineEndColor,lineStartColor, Shader.TileMode.MIRROR);
-        gradient3 = new LinearGradient(0,15*mHalfViewHeight/16,0,17*mHalfViewHeight/16,lineEndColor,lineStartColor, Shader.TileMode.MIRROR);;
-        gradient4 = new LinearGradient(2*mWidth/3,mHalfViewHeight*14/16,2*mWidth/3,mHalfViewHeight*18/16,lineEndColor,lineStartColor, Shader.TileMode.MIRROR);
-
     }
 
-    public void setAmplitude(float amplitude, boolean recordingState) {
+    public synchronized void setAmplitude(float amplitude) {
         mAmplitude = amplitude;
-//        Log.d(TAG,"mAmplitude = "+mAmplitude);
+        Log.d(TAG,"mAmplitude = "+mAmplitude);
     }
 
     private final Object mSurfaceLock = new Object();
